@@ -18,16 +18,16 @@ PicCaption は、画像をアップロードして Amazon Bedrock で説明文�
 
 ![AWS 構成図](image/architecture.png)
 
-## 画面とデモ
+## アプリケーション画面
 
-<div align="center">
-  <table>
-    <tr>
-      <td align="center"><img src="image/piccaption.png" alt="PicCaption の画面" width="420" /></td>
-      <td align="center"><video src="image/Media1.mp4" controls width="420"></video></td>
-    </tr>
-  </table>
-</div>
+![PicCaption のログイン画面](image/piccaption.png)
+
+## デモ動画
+
+<video controls width="100%">
+  <source src="image/Media1.mp4" type="video/mp4">
+  お使いのブラウザは video タグをサポートしていません。
+</video>
 
 ## 技術スタック
 
