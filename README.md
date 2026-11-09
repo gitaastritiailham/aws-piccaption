@@ -24,7 +24,10 @@ PicCaption は、画像をアップロードして Amazon Bedrock で説明文�
 
 ## デモ動画
 
-- アプリケーションの動作デモ: [Media1.MOV](image/Media1.MOV)
+<video controls width="100%">
+  <source src="image/Media1.mp4" type="video/mp4">
+  お使いのブラウザは video タグをサポートしていません。
+</video>
 
 ## 技術スタック
 
