@@ -1,0 +1,613 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>PicCaption — AI Image Gallery</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      background: #f5f5f5;
+      color: #1a1a1a;
+      min-height: 100vh;
+    }
+
+    /* ---- NAV ---- */
+    nav {
+      background: #fff;
+      border-bottom: 1px solid #e5e5e5;
+      padding: 0 24px;
+      height: 56px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      position: sticky;
+      top: 0;
+      z-index: 100;
+    }
+    .logo { font-size: 18px; font-weight: 600; color: #1a1a1a; }
+    .logo span { color: #6366f1; }
+    .nav-right { display: flex; align-items: center; gap: 12px; }
+    .btn {
+      padding: 8px 16px;
+      border-radius: 8px;
+      font-size: 14px;
+      font-weight: 500;
+      cursor: pointer;
+      border: none;
+      transition: opacity .15s;
+    }
+    .btn:hover { opacity: .85; }
+    .btn-primary { background: #6366f1; color: #fff; }
+    .btn-outline { background: transparent; border: 1px solid #d4d4d4; color: #1a1a1a; }
+    .btn-danger { background: #fee2e2; color: #b91c1c; }
+
+    /* ---- PAGES ---- */
+    .page { display: none; }
+    .page.active { display: block; }
+
+    /* ---- AUTH PAGE ---- */
+    .auth-wrap {
+      max-width: 400px;
+      margin: 80px auto;
+      background: #fff;
+      border-radius: 16px;
+      padding: 32px;
+      border: 1px solid #e5e5e5;
+    }
+    .auth-wrap h2 { font-size: 22px; font-weight: 600; margin-bottom: 6px; }
+    .auth-wrap p { color: #737373; font-size: 14px; margin-bottom: 24px; }
+    .field { margin-bottom: 16px; }
+    .field label { display: block; font-size: 13px; font-weight: 500; margin-bottom: 6px; }
+    .field input {
+      width: 100%;
+      padding: 10px 12px;
+      border: 1px solid #d4d4d4;
+      border-radius: 8px;
+      font-size: 14px;
+      outline: none;
+      transition: border-color .15s;
+    }
+    .field input:focus { border-color: #6366f1; }
+    .auth-switch { margin-top: 16px; text-align: center; font-size: 13px; color: #737373; }
+    .auth-switch a { color: #6366f1; cursor: pointer; text-decoration: none; font-weight: 500; }
+    .error-msg { color: #b91c1c; font-size: 13px; margin-top: 8px; display: none; }
+    .success-msg { color: #15803d; font-size: 13px; margin-top: 8px; display: none; }
+
+    /* ---- MAIN PAGE ---- */
+    .container { max-width: 900px; margin: 0 auto; padding: 32px 24px; }
+
+    /* ---- UPLOAD AREA ---- */
+    .upload-card {
+      background: #fff;
+      border-radius: 16px;
+      padding: 24px;
+      border: 1px solid #e5e5e5;
+      margin-bottom: 32px;
+    }
+    .upload-card h3 { font-size: 16px; font-weight: 600; margin-bottom: 16px; }
+    .drop-zone {
+      border: 2px dashed #d4d4d4;
+      border-radius: 12px;
+      padding: 40px;
+      text-align: center;
+      cursor: pointer;
+      transition: border-color .15s, background .15s;
+    }
+    .drop-zone:hover, .drop-zone.dragover {
+      border-color: #6366f1;
+      background: #f5f3ff;
+    }
+    .drop-zone .icon { font-size: 36px; margin-bottom: 12px; }
+    .drop-zone p { font-size: 14px; color: #737373; }
+    .drop-zone strong { color: #6366f1; }
+    #file-input { display: none; }
+    .preview-wrap { display: none; margin-top: 16px; align-items: center; gap: 16px; }
+    .preview-wrap img { width: 80px; height: 80px; object-fit: cover; border-radius: 8px; border: 1px solid #e5e5e5; }
+    .preview-info { flex: 1; }
+    .preview-info .fname { font-size: 14px; font-weight: 500; }
+    .preview-info .fsize { font-size: 12px; color: #737373; margin-top: 2px; }
+    .upload-progress { margin-top: 12px; display: none; }
+    .progress-bar-bg { height: 6px; background: #e5e5e5; border-radius: 3px; overflow: hidden; }
+    .progress-bar { height: 100%; background: #6366f1; border-radius: 3px; width: 0%; transition: width .3s; }
+    .progress-label { font-size: 12px; color: #737373; margin-top: 6px; }
+
+    /* ---- GALLERY ---- */
+    .gallery-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 16px;
+    }
+    .gallery-header h3 { font-size: 16px; font-weight: 600; }
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+      gap: 16px;
+    }
+    .img-card {
+      background: #fff;
+      border-radius: 12px;
+      overflow: hidden;
+      border: 1px solid #e5e5e5;
+      transition: box-shadow .15s;
+    }
+    .img-card:hover { box-shadow: 0 4px 16px rgba(0,0,0,.08); }
+    .img-card img {
+      width: 100%;
+      aspect-ratio: 4/3;
+      object-fit: cover;
+      background: #f5f5f5;
+    }
+    .img-card-body { padding: 12px; }
+    .img-caption { font-size: 13px; color: #1a1a1a; line-height: 1.5; }
+    .img-caption.pending { color: #a3a3a3; font-style: italic; }
+    .img-meta { font-size: 11px; color: #a3a3a3; margin-top: 6px; }
+    .status-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      font-size: 10px;
+      padding: 2px 8px;
+      border-radius: 20px;
+      font-weight: 500;
+      margin-top: 4px;
+    }
+    .badge-pending { background: #fef3c7; color: #92400e; }
+    .badge-done { background: #dcfce7; color: #166534; }
+    .badge-failed { background: #fee2e2; color: #b91c1c; }
+
+    .empty-state {
+      text-align: center;
+      padding: 60px 24px;
+      color: #a3a3a3;
+    }
+    .empty-state .icon { font-size: 48px; margin-bottom: 12px; }
+    .empty-state p { font-size: 14px; }
+
+    .spinner {
+      display: inline-block;
+      width: 14px;
+      height: 14px;
+      border: 2px solid #e5e5e5;
+      border-top-color: #6366f1;
+      border-radius: 50%;
+      animation: spin .6s linear infinite;
+      vertical-align: middle;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+  </style>
+</head>
+<body>
+
+<!-- NAV -->
+<nav>
+  <div class="logo">Pic<span>Caption</span></div>
+  <div class="nav-right" id="nav-auth-section">
+    <button class="btn btn-outline" onclick="showPage('login')">Login</button>
+    <button class="btn btn-primary" onclick="showPage('register')">Register</button>
+  </div>
+  <div class="nav-right" id="nav-user-section" style="display:none">
+    <span id="nav-email" style="font-size:13px;color:#737373"></span>
+    <button class="btn btn-outline" onclick="logout()">Logout</button>
+  </div>
+</nav>
+
+<!-- PAGE: LOGIN -->
+<div id="page-login" class="page active">
+  <div class="auth-wrap">
+    <h2>Welcome back</h2>
+    <p>Login to see your AI-captioned gallery</p>
+    <div class="field">
+      <label>Email</label>
+      <input type="email" id="login-email" placeholder="you@example.com" />
+    </div>
+    <div class="field">
+      <label>Password</label>
+      <input type="password" id="login-password" placeholder="••••••••" onkeydown="if(event.key==='Enter')loginUser()" />
+    </div>
+    <button class="btn btn-primary" style="width:100%" onclick="loginUser()">Login</button>
+    <div class="error-msg" id="login-error"></div>
+    <div class="auth-switch">
+      Don't have an account? <a onclick="showPage('register')">Register</a>
+    </div>
+  </div>
+</div>
+
+<!-- PAGE: REGISTER -->
+<div id="page-register" class="page">
+  <div class="auth-wrap">
+    <h2>Create account</h2>
+    <p>Sign up to start uploading images</p>
+    <div class="field">
+      <label>Email</label>
+      <input type="email" id="reg-email" placeholder="you@example.com" />
+    </div>
+    <div class="field">
+      <label>Password <span style="color:#a3a3a3;font-weight:400">(min 8 chars + number)</span></label>
+      <input type="password" id="reg-password" placeholder="••••••••" />
+    </div>
+    <button class="btn btn-primary" style="width:100%" onclick="registerUser()">Register</button>
+    <div class="error-msg" id="reg-error"></div>
+    <div class="success-msg" id="reg-success"></div>
+    <div class="auth-switch">
+      Already have an account? <a onclick="showPage('login')">Login</a>
+    </div>
+  </div>
+</div>
+
+<!-- PAGE: VERIFY OTP -->
+<div id="page-verify" class="page">
+  <div class="auth-wrap">
+    <h2>Check your email</h2>
+    <p>We sent a 6-digit confirmation code to <strong id="verify-email-display"></strong></p>
+    <div class="field">
+      <label>Confirmation Code</label>
+      <input type="text" id="otp-code" placeholder="123456" maxlength="6" onkeydown="if(event.key==='Enter')confirmUser()" />
+    </div>
+    <button class="btn btn-primary" style="width:100%" onclick="confirmUser()">Confirm</button>
+    <div class="error-msg" id="verify-error"></div>
+    <div class="auth-switch">
+      <a onclick="resendCode()">Resend code</a>
+    </div>
+  </div>
+</div>
+
+<!-- PAGE: MAIN APP -->
+<div id="page-main" class="page">
+  <div class="container">
+
+    <!-- Upload -->
+    <div class="upload-card">
+      <h3>Upload Image</h3>
+      <div class="drop-zone" id="drop-zone" onclick="document.getElementById('file-input').click()" ondragover="onDragOver(event)" ondragleave="onDragLeave(event)" ondrop="onDrop(event)">
+        <div class="icon">🖼️</div>
+        <p><strong>Click to upload</strong> or drag and drop</p>
+        <p style="margin-top:4px;font-size:12px">JPG, PNG up to 10MB</p>
+      </div>
+      <input type="file" id="file-input" accept="image/*" onchange="onFileSelect(event)" />
+
+      <div class="preview-wrap" id="preview-wrap">
+        <img id="preview-img" src="" alt="preview" />
+        <div class="preview-info">
+          <div class="fname" id="preview-name"></div>
+          <div class="fsize" id="preview-size"></div>
+        </div>
+        <button class="btn btn-primary" onclick="uploadImage()">Upload & Caption</button>
+      </div>
+
+      <div class="upload-progress" id="upload-progress">
+        <div class="progress-bar-bg"><div class="progress-bar" id="progress-bar"></div></div>
+        <div class="progress-label" id="progress-label">Uploading...</div>
+      </div>
+    </div>
+
+    <!-- Gallery -->
+    <div class="gallery-header">
+      <h3>Your Gallery</h3>
+      <button class="btn btn-outline" onclick="loadImages()">
+        <span class="spinner" id="refresh-spinner" style="display:none"></span> Refresh
+      </button>
+    </div>
+    <div class="grid" id="gallery-grid">
+      <div class="empty-state" style="grid-column:1/-1">
+        <div class="icon">📷</div>
+        <p>No images yet. Upload your first image!</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+// ============================================================
+// CONFIG — values injected by deploy script or set manually
+// ============================================================
+const CONFIG = {
+  API_URL: "%%API_URL%%",           // e.g. https://xxxx.execute-api.us-east-1.amazonaws.com/prod
+  USER_POOL_ID: "%%USER_POOL_ID%%", // e.g. us-east-1_XXXXXXX
+  CLIENT_ID: "%%CLIENT_ID%%",       // Cognito App Client ID
+  REGION: "us-east-1",
+};
+
+// ============================================================
+// AUTH STATE
+// ============================================================
+let currentUser = null;
+let pendingEmail = "";
+
+function showPage(name) {
+  document.querySelectorAll(".page").forEach(p => p.classList.remove("active"));
+  document.getElementById(`page-${name}`).classList.add("active");
+}
+
+function setNavUser(email) {
+  document.getElementById("nav-auth-section").style.display = "none";
+  document.getElementById("nav-user-section").style.display = "flex";
+  document.getElementById("nav-email").textContent = email;
+}
+
+function setNavGuest() {
+  document.getElementById("nav-auth-section").style.display = "flex";
+  document.getElementById("nav-user-section").style.display = "none";
+}
+
+// ============================================================
+// COGNITO AUTH (direct API, no SDK)
+// ============================================================
+async function cognitoRequest(action, body) {
+  const res = await fetch(`https://cognito-idp.${CONFIG.REGION}.amazonaws.com/`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/x-amz-json-1.1",
+      "X-Amz-Target": `AWSCognitoIdentityProviderService.${action}`,
+    },
+    body: JSON.stringify(body),
+  });
+  const data = await res.json();
+  if (!res.ok) throw new Error(data.message || data.__type || "Auth error");
+  return data;
+}
+
+async function registerUser() {
+  const email = document.getElementById("reg-email").value.trim();
+  const password = document.getElementById("reg-password").value;
+  const errEl = document.getElementById("reg-error");
+  const successEl = document.getElementById("reg-success");
+  errEl.style.display = "none";
+  successEl.style.display = "none";
+
+  try {
+    await cognitoRequest("SignUp", {
+      ClientId: CONFIG.CLIENT_ID,
+      Username: email,
+      Password: password,
+      UserAttributes: [{ Name: "email", Value: email }],
+    });
+    pendingEmail = email;
+    document.getElementById("verify-email-display").textContent = email;
+    showPage("verify");
+  } catch (e) {
+    errEl.textContent = e.message;
+    errEl.style.display = "block";
+  }
+}
+
+async function confirmUser() {
+  const code = document.getElementById("otp-code").value.trim();
+  const errEl = document.getElementById("verify-error");
+  errEl.style.display = "none";
+
+  try {
+    await cognitoRequest("ConfirmSignUp", {
+      ClientId: CONFIG.CLIENT_ID,
+      Username: pendingEmail,
+      ConfirmationCode: code,
+    });
+    showPage("login");
+    document.getElementById("login-email").value = pendingEmail;
+  } catch (e) {
+    errEl.textContent = e.message;
+    errEl.style.display = "block";
+  }
+}
+
+async function resendCode() {
+  await cognitoRequest("ResendConfirmationCode", {
+    ClientId: CONFIG.CLIENT_ID,
+    Username: pendingEmail,
+  });
+  alert("Code resent!");
+}
+
+async function loginUser() {
+  const email = document.getElementById("login-email").value.trim();
+  const password = document.getElementById("login-password").value;
+  const errEl = document.getElementById("login-error");
+  errEl.style.display = "none";
+
+  try {
+    const data = await cognitoRequest("InitiateAuth", {
+      AuthFlow: "USER_PASSWORD_AUTH",
+      ClientId: CONFIG.CLIENT_ID,
+      AuthParameters: { USERNAME: email, PASSWORD: password },
+    });
+
+    currentUser = {
+      email,
+      idToken: data.AuthenticationResult.IdToken,
+      accessToken: data.AuthenticationResult.AccessToken,
+      refreshToken: data.AuthenticationResult.RefreshToken,
+    };
+
+    localStorage.setItem("piccaption_user", JSON.stringify(currentUser));
+    setNavUser(email);
+    showPage("main");
+    loadImages();
+  } catch (e) {
+    errEl.textContent = e.message;
+    errEl.style.display = "block";
+  }
+}
+
+function logout() {
+  currentUser = null;
+  localStorage.removeItem("piccaption_user");
+  setNavGuest();
+  showPage("login");
+}
+
+// ============================================================
+// FILE HANDLING
+// ============================================================
+let selectedFile = null;
+
+function onFileSelect(e) {
+  const file = e.target.files[0];
+  if (file) setPreview(file);
+}
+
+function onDragOver(e) {
+  e.preventDefault();
+  document.getElementById("drop-zone").classList.add("dragover");
+}
+
+function onDragLeave() {
+  document.getElementById("drop-zone").classList.remove("dragover");
+}
+
+function onDrop(e) {
+  e.preventDefault();
+  document.getElementById("drop-zone").classList.remove("dragover");
+  const file = e.dataTransfer.files[0];
+  if (file && file.type.startsWith("image/")) setPreview(file);
+}
+
+function setPreview(file) {
+  selectedFile = file;
+  const reader = new FileReader();
+  reader.onload = (e) => {
+    document.getElementById("preview-img").src = e.target.result;
+  };
+  reader.readAsDataURL(file);
+  document.getElementById("preview-name").textContent = file.name;
+  document.getElementById("preview-size").textContent = (file.size / 1024).toFixed(1) + " KB";
+  document.getElementById("preview-wrap").style.display = "flex";
+}
+
+// ============================================================
+// UPLOAD
+// ============================================================
+async function uploadImage() {
+  if (!selectedFile || !currentUser) return;
+
+  const progress = document.getElementById("upload-progress");
+  const bar = document.getElementById("progress-bar");
+  const label = document.getElementById("progress-label");
+  progress.style.display = "block";
+  bar.style.width = "10%";
+  label.textContent = "Getting upload URL...";
+
+  try {
+    // Step 1: get presigned URL
+    const res = await fetch(`${CONFIG.API_URL}/upload`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: currentUser.idToken,
+      },
+      body: JSON.stringify({
+        fileName: selectedFile.name,
+        fileType: selectedFile.type,
+      }),
+    });
+
+    const { uploadUrl } = await res.json();
+    bar.style.width = "40%";
+    label.textContent = "Uploading image...";
+
+    // Step 2: upload directly to S3
+    await fetch(uploadUrl, {
+      method: "PUT",
+      headers: { "Content-Type": selectedFile.type },
+      body: selectedFile,
+    });
+
+    bar.style.width = "100%";
+    label.textContent = "✅ Uploaded! AI is generating caption...";
+
+    // Reset UI
+    setTimeout(() => {
+      progress.style.display = "none";
+      document.getElementById("preview-wrap").style.display = "none";
+      selectedFile = null;
+      document.getElementById("file-input").value = "";
+      bar.style.width = "0%";
+      loadImages();
+    }, 2000);
+
+  } catch (e) {
+    label.textContent = "❌ Upload failed: " + e.message;
+  }
+}
+
+// ============================================================
+// GALLERY
+// ============================================================
+async function loadImages() {
+  if (!currentUser) return;
+
+  const spinner = document.getElementById("refresh-spinner");
+  spinner.style.display = "inline-block";
+
+  try {
+    const res = await fetch(`${CONFIG.API_URL}/images`, {
+      headers: { Authorization: currentUser.idToken },
+    });
+    const { images } = await res.json();
+    renderGallery(images);
+  } catch (e) {
+    console.error("Failed to load images:", e);
+  } finally {
+    spinner.style.display = "none";
+  }
+}
+
+function renderGallery(images) {
+  const grid = document.getElementById("gallery-grid");
+  if (!images || images.length === 0) {
+    grid.innerHTML = `
+      <div class="empty-state" style="grid-column:1/-1">
+        <div class="icon">📷</div>
+        <p>No images yet. Upload your first image!</p>
+      </div>`;
+    return;
+  }
+
+  grid.innerHTML = images.map(img => {
+    const badgeClass = img.status === "DONE" ? "badge-done" : img.status === "FAILED" ? "badge-failed" : "badge-pending";
+    const captionClass = img.status === "PENDING" ? "pending" : "";
+    const date = new Date(img.createdAt).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" });
+
+    return `
+      <div class="img-card">
+        <img src="${img.viewUrl}" alt="${img.fileName}" loading="lazy" onerror="this.src='data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 75%22><rect fill=%22%23f5f5f5%22 width=%22100%22 height=%22100%22/><text x=%2250%22 y=%2250%22 text-anchor=%22middle%22 fill=%22%23a3a3a3%22 font-size=%2212%22>Loading...</text></svg>'" />
+        <div class="img-card-body">
+          <div class="img-caption ${captionClass}">${img.caption}</div>
+          <div>
+            <span class="status-badge ${badgeClass}">
+              ${img.status === "PENDING" ? "⏳ Processing" : img.status === "DONE" ? "✅ Done" : "❌ Failed"}
+            </span>
+          </div>
+          <div class="img-meta">${img.fileName} · ${date}</div>
+        </div>
+      </div>`;
+  }).join("");
+}
+
+// ============================================================
+// INIT
+// ============================================================
+window.onload = () => {
+  const saved = localStorage.getItem("piccaption_user");
+  if (saved) {
+    currentUser = JSON.parse(saved);
+    setNavUser(currentUser.email);
+    showPage("main");
+    loadImages();
+  } else {
+    showPage("login");
+  }
+
+  // Auto-refresh pending images every 5 seconds
+  setInterval(() => {
+    const grid = document.getElementById("gallery-grid");
+    if (currentUser && grid.querySelector(".badge-pending")) {
+      loadImages();
+    }
+  }, 5000);
+};
+</script>
+</body>
+</html>
