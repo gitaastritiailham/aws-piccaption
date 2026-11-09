@@ -22,6 +22,10 @@ PicCaption は、画像をアップロードして Amazon Bedrock で説明文�
 
 ![PicCaption のログイン画面](image/piccaption.png)
 
+## デモ動画
+
+- アプリケーションの動作デモ: [Media1.MOV](image/Media1.MOV)
+
 ## 技術スタック
 
 | サービス | 用途 |
