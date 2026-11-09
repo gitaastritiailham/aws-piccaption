@@ -18,15 +18,19 @@ PicCaption は、画像をアップロードして Amazon Bedrock で説明文�
 
 ![AWS 構成図](image/architecture.png)
 
-アプリケーション画面
+## アプリケーション画面
 
 <div align="center">
   <img src="image/piccaption.png" alt="PicCaption のログイン画面" width="350">
 </div>
 
-デモ動画
+## デモ動画
 
-https://github.com/user-attachments/assets/d6643aeb-76e4-4dd8-a281-4ab7240c4bf4
+<div align="center">
+  <a href="https://github.com/user-attachments/assets/d6643aeb-76e4-4dd8-a281-4ab7240c4bf4">
+    デモ動画を見る
+  </a>
+</div>
 
 ## 技術スタック
 
