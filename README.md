@@ -28,9 +28,9 @@ PicCaption は、画像をアップロードして Amazon Bedrock で説明文�
     </td>
     <td width="50%" align="center">
       <strong>デモ動画</strong><br><br>
-      <a href="https://github.com/user-attachments/assets/d6643aeb-76e4-4dd8-a281-4ab7240c4bf4">
-        ▶ デモ動画を見る
-      </a>
+
+      https://github.com/user-attachments/assets/df7f9769-dced-4012-8583-a7213ea9d2f5
+
     </td>
   </tr>
 </table>
